@@ -1,63 +1,34 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Text;
 
 namespace LineAdjustment
 {
     public class LineAdjustmentAlgorithm
     {
 
-
-
         private const char CHAR_NEWLINE = '\n';
-        private const float CAPACITY_MULT = 2;
-
-        /*
-        private static string AllocateString(int length)
-            => new string(CHAR_SPACE, (int)(length * CAPACITY_MULT));
-
-        private static string Allocate(int length, LineIterator context)
-        {
-            return string.Create(length, context, (chars, state) =>
-            {
-                // NOTE: We don't access the context variable in this delegate since 
-                // it would cause a closure and allocation.
-                // Instead we access the state parameter.
-
-                // will track our position within the string data we are populating
-                var position = 0;
-
-                // copy the first string data to index 0 of the Span<char>
-                state.FirstString.AsSpan().CopyTo(chars);
-                position += state.FirstString.Length; // update the position
-
-                // add a space in the current position and increement position by 1
-                chars[position++] = spaceSeparator;
-
-                // copy the second string data to a slice at current position
-                state.SecondString.AsSpan().CopyTo(chars.Slice(position));
-                position += state.SecondString.Length; // update the position
-
-                // add a space in the current position and increement position by 1
-                chars[position++] = spaceSeparator;
-
-                // copy the third string data to a slice at current position
-                state.ThirdString.AsSpan().CopyTo(chars.Slice(position));
-            });
-        }
-        */
+        private const float CAPACITY_MULT = 1.1f;
+        private const float CAPACITY_MULT_STEP = .5f;
 
         public string Transform(string input, int lineWidth)
         {
             var tracker = new TextTracker(input, lineWidth);
-            var rval = new StringBuilder();
-            foreach (var (pos, wcount, ccount) in tracker.EnumerateLines())
+            var mult = CAPACITY_MULT;
+            var length = input?.Length ?? 0;
+            var buf = new char[(int)(length * mult)];
+            var i = 0;
+            foreach (var (pos, wcount, ccount) in tracker.TraverseLineMarkup())
             {
-                if (rval.Length > 0)
-                    rval.Append(CHAR_NEWLINE);
-                rval.Append(tracker.GetWideLine(pos, wcount, ccount));
+                if (i > 0)
+                    buf[i++] = CHAR_NEWLINE;
+                while (!tracker.WriteWideLine(in buf, ref i, (pos, wcount, ccount)))
+                {
+                    mult += CAPACITY_MULT_STEP;
+                    var buf2 = new char[(int)(length * mult)];
+                    Array.Copy(buf, buf2, buf.Length);
+                    buf = buf2;
+                };
             }
-            return rval.ToString();
+            return new string(buf, 0, i);
         }
     }
 }

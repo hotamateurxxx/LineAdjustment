@@ -48,7 +48,7 @@ namespace LineAdjustment
         /// <param name="count">Количество читаемых слов (сколько перечислять).</param>
         /// <returns>Перечисление в формате (позиция, длина).</returns>
         /// <exception cref="ArithmeticException"></exception>
-        public IEnumerable<(int pos, int length)> EnumerateWords(int start = 0, int count = 0)
+        public IEnumerable<(int pos, int length)> TraverseWordMarkup(int start = 0, int count = 0)
         {
             var found = false;
             var i = start;
@@ -88,13 +88,13 @@ namespace LineAdjustment
         /// Перечисление информации о разбивке по строкам.
         /// </summary>
         /// <returns>Перечисление в формате (позиция, количество слов, количество символов).</returns>
-        public IEnumerable<(int pos, int wcount, int ccount)> EnumerateLines()
+        public IEnumerable<(int pos, int wcount, int ccount)> TraverseLineMarkup()
         {
             var found = false;
             var pos = 0;
             var wcount = 0;
             var ccount = 0;
-            foreach (var (wpos, wlength) in EnumerateWords())
+            foreach (var (wpos, wlength) in TraverseWordMarkup())
             {
                 var newWidth = CalcLineWidth(wcount + 1, ccount + wlength);
                 if (newWidth > Width)
@@ -119,28 +119,40 @@ namespace LineAdjustment
                 yield return (pos, wcount, ccount);
         }
 
-        public void FillWideLine(in char[] buf, int pos, int words_count, int chars_count)
+        /// <summary>
+        /// Записать в буфер растянутую линию по её разметке.
+        /// </summary>
+        /// <param name="buf">Буфер.</param>
+        /// <param name="buf_pos">Позиция буфера.</param>
+        /// <param name="line">Разметка линии.</param>
+        /// <returns>Успешность операции.</returns>
+        public bool WriteWideLine(in char[] buf, ref int buf_pos, (int pos, int wcount, int ccount) line)
         {
-            Array.Fill(buf, CHAR_SPACE, 0, Width);
-            if (words_count == 1)
+            if (buf.Length < buf_pos + Width)
+                return false;
+
+            Array.Fill(buf, CHAR_SPACE, buf_pos, Width);
+            if (line.wcount == 1)
             {
-                Input.CopyTo(pos, buf, 0, chars_count);
+                Input.CopyTo(line.pos, buf, buf_pos, line.ccount);
             }
             else
             {
                 var wnum = 0;
                 var rpos = 0;
-                var (each, first) = CalcLineSpaces(words_count, chars_count, Width);
-                foreach (var (wpos, wlength) in EnumerateWords(pos, words_count))
+                var (each, first) = CalcLineSpaces(line.wcount, line.ccount, Width);
+                foreach (var (wpos, wlength) in TraverseWordMarkup(line.pos, line.wcount))
                 {
                     rpos += wnum > 0
                         ? each + (wnum > first ? 0 : 1)
                         : 0;
-                    Input.CopyTo(wpos, buf, rpos, wlength);
+                    Input.CopyTo(wpos, buf, buf_pos + rpos, wlength);
                     rpos += wlength;
                     wnum++;
                 }
             }
+            buf_pos += Width;
+            return true;
         }
 
         /// <summary>
@@ -153,7 +165,8 @@ namespace LineAdjustment
         public char[] GetWideLine(int pos, int words_count, int chars_count)
         {
             var buf = new char[Width];
-            FillWideLine(buf, pos, words_count, chars_count);
+            var buf_pos = 0;
+            WriteWideLine(buf, ref buf_pos, (pos, words_count, chars_count));
             return buf;
         }
 
