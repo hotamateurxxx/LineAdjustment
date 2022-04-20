@@ -3,7 +3,7 @@ using System;
 
 namespace LineAdjustment.Tests
 {
-    public class TextIteratorTests
+    public class TextTrackerTests
     {
         [Test]
         [TestCase(null, 5, new string[]{})]
@@ -15,9 +15,9 @@ namespace LineAdjustment.Tests
             new string[] { "dolor", "sit"}, 11, 2)]
         public void GetWordsTest(string input, int lineWidth, string[] expected, int start = 0, int count = 0)
         {
-            var iterator = new TextIterator(input, lineWidth);
+            var iterator = new TextTracker(input, lineWidth);
             var list = new System.Collections.Generic.List<string>();
-            foreach (var (pos, length) in iterator.GetWords(start, count))
+            foreach (var (pos, length) in iterator.EnumerateWords(start, count))
             {
                 list.Add(input.AsSpan(pos, length).ToString());
             }
@@ -33,9 +33,9 @@ namespace LineAdjustment.Tests
             new string[] { "Lorem ipsum", "dolor sit", "amet", "consectetur", "adipiscing", "elit sed do", "eiusmod", "tempor", "incididunt", "ut labore et", "dolore magna", "aliqua" })]
         public void GetSourceLinesTest(string input, int lineWidth, string[] expected)
         {
-            var iterator = new TextIterator(input, lineWidth);
+            var iterator = new TextTracker(input, lineWidth);
             var list = new System.Collections.Generic.List<string>();
-            foreach (var (pos, wcount, ccount) in iterator.GetLines())
+            foreach (var (pos, wcount, ccount) in iterator.EnumerateLines())
             {
                 list.Add(iterator.GetSourceLine(pos, ccount).ToString());
             }
@@ -53,9 +53,9 @@ namespace LineAdjustment.Tests
             new string[] { "Lorem  ipsum", "dolor    sit", "amet        ", "consectetur ", "adipiscing  ", "elit  sed do", "eiusmod     ", "tempor      ", "incididunt  ", "ut labore et", "dolore magna", "aliqua      " })]
         public void GetWideLinesTest(string input, int lineWidth, string[] expected)
         {
-            var iterator = new TextIterator(input, lineWidth);
+            var iterator = new TextTracker(input, lineWidth);
             var list = new System.Collections.Generic.List<string>();
-            foreach (var (pos, wcount, ccount) in iterator.GetLines())
+            foreach (var (pos, wcount, ccount) in iterator.EnumerateLines())
             {
                 list.Add(new string(iterator.GetWideLine(pos, wcount, ccount)));
             }

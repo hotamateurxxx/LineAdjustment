@@ -3,7 +3,7 @@ using System.Collections.Generic;
 
 namespace LineAdjustment
 {
-    public struct TextIterator
+    public struct TextTracker
     {
 
         private const char CHAR_SPACE = '\u0020';
@@ -11,44 +11,44 @@ namespace LineAdjustment
         /// <summary>
         /// Вычисление минимальной ширины строки.
         /// </summary>
-        /// <param name="wcount">Количество слов.</param>
-        /// <param name="ccount">Количество символов.</param>
+        /// <param name="words_count">Количество слов.</param>
+        /// <param name="chars_count">Количество символов.</param>
         /// <returns>Минимальная ширина строки.</returns>
-        private static int CalcLineWidth(int wcount, int ccount)
-            => wcount == 0
+        private static int CalcLineWidth(int words_count, int chars_count)
+            => words_count == 0
                 ? 0
-                : wcount - 1 + ccount;
+                : words_count - 1 + chars_count;
 
         /// <summary>
         /// Вычисление количества пробелов между словами в строке.
         /// </summary>
-        /// <param name="wcount">Количество слов.</param>
-        /// <param name="ccount">Количество символов.</param>
-        /// <param name="width">Ширина строки.</param>
+        /// <param name="words_count">Количество слов.</param>
+        /// <param name="chars_count">Количество символов.</param>
+        /// <param name="line_width">Ширина строки.</param>
         /// <returns>Количесто пробелов в формате (each, first).</returns>
-        private static (int each, int first) CalcLineSpaces(int wcount, int ccount, int width)
+        private static (int each, int first) CalcLineSpaces(int words_count, int chars_count, int line_width)
             => (
-                (width - ccount) / (wcount - 1), 
-                (width - ccount) % (wcount - 1)
+                (line_width - chars_count) / (words_count - 1), 
+                (line_width - chars_count) % (words_count - 1)
             );
 
         private readonly string Input;
         private readonly int Width;
 
-        public TextIterator(in string input, in int width)
+        public TextTracker(in string input, in int width)
         {
             Input = input;
             Width = width;
         }
 
         /// <summary>
-        /// Получить итератор слов по входящей строке.
+        /// Перечисление информации о разбивке по словам.
         /// </summary>
-        /// <param name="start">Стартовое смещение.</param>
-        /// <param name="count">Количество читаемых слов.</param>
-        /// <returns>Перечисление слов в формате (позиция, длина).</returns>
-        /// <exception cref="ArgumentOutOfRangeException"></exception>
-        public IEnumerable<(int pos, int length)> GetWords(int start = 0, int count = 0)
+        /// <param name="start">Стартовое смещение (откуда перечислять).</param>
+        /// <param name="count">Количество читаемых слов (сколько перечислять).</param>
+        /// <returns>Перечисление в формате (позиция, длина).</returns>
+        /// <exception cref="ArithmeticException"></exception>
+        public IEnumerable<(int pos, int length)> EnumerateWords(int start = 0, int count = 0)
         {
             var found = false;
             var i = start;
@@ -63,7 +63,7 @@ namespace LineAdjustment
                     {
                         var ccount = i - pos;
                         if (ccount > Width)
-                            throw new ArgumentOutOfRangeException();
+                            throw new ArithmeticException();
                         yield return (pos, ccount);
                         if ((count > 0) && (++retCount == count))
                             yield break;
@@ -85,16 +85,16 @@ namespace LineAdjustment
         }
 
         /// <summary>
-        /// Получить итератор строк по входящей строке.
+        /// Перечисление информации о разбивке по строкам.
         /// </summary>
-        /// <returns>Перечисление строк в формате (позиция, количество слов, количество символов).</returns>
-        public IEnumerable<(int pos, int wcount, int ccount)> GetLines()
+        /// <returns>Перечисление в формате (позиция, количество слов, количество символов).</returns>
+        public IEnumerable<(int pos, int wcount, int ccount)> EnumerateLines()
         {
             var found = false;
             var pos = 0;
             var wcount = 0;
             var ccount = 0;
-            foreach (var (wpos, wlength) in GetWords())
+            foreach (var (wpos, wlength) in EnumerateWords())
             {
                 var newWidth = CalcLineWidth(wcount + 1, ccount + wlength);
                 if (newWidth > Width)
@@ -123,15 +123,15 @@ namespace LineAdjustment
         /// Строка на входе (технический метод для контроля).
         /// </summary>
         /// <param name="pos">Позиция начала строки.</param>
-        /// <param name="ccount">Количество символов в словах.</param>
+        /// <param name="chars_count">Количество символов в словах.</param>
         /// <returns>Строка для проверки.</returns>
-        public ReadOnlySpan<char> GetSourceLine(int pos, int ccount)
+        public ReadOnlySpan<char> GetSourceLine(int pos, int chars_count)
         {
             var i = pos;
-            while (ccount > 0)
+            while (chars_count > 0)
             {
                 if (Input[i] != CHAR_SPACE)
-                    ccount--;
+                    chars_count--;
                 i++;
             }
             return Input.AsSpan(pos, i - pos);
@@ -141,23 +141,23 @@ namespace LineAdjustment
         /// Получить растянутую по ширине строку.
         /// </summary>
         /// <param name="pos">Позиция.</param>
-        /// <param name="wcount">Количество слов.</param>
-        /// <param name="ccount">Количество символов.</param>
+        /// <param name="words_count">Количество слов.</param>
+        /// <param name="chars_count">Количество символов.</param>
         /// <returns>Растянутая по ширине строка.</returns>
-        public char[] GetWideLine(int pos, int wcount, int ccount)
+        public char[] GetWideLine(int pos, int words_count, int chars_count)
         {
             var buf = new char[Width];
             Array.Fill(buf, CHAR_SPACE, 0, Width);
-            if (wcount == 1)
+            if (words_count == 1)
             {
-                Input.CopyTo(pos, buf, 0, ccount);
+                Input.CopyTo(pos, buf, 0, chars_count);
             }
             else
             {
                 var wnum = 0;
                 var rpos = 0;
-                var (each, first) = CalcLineSpaces(wcount, ccount, Width);
-                foreach (var (wpos, wlength) in GetWords(pos, wcount))
+                var (each, first) = CalcLineSpaces(words_count, chars_count, Width);
+                foreach (var (wpos, wlength) in EnumerateWords(pos, words_count))
                 {
                     rpos += wnum > 0 
                         ? each + (wnum > first ? 0 : 1)
