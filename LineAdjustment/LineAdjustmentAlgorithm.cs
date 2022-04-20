@@ -11,12 +11,12 @@ namespace LineAdjustment
 
         public string Transform(string input, int lineWidth)
         {
-            var tracker = new TextTracker(input, lineWidth);
+            var tracker = new TextMarker(input, lineWidth);
             var mult = CAPACITY_MULT;
             var length = input?.Length ?? 0;
             var buf = new char[(int)(length * mult)];
             var i = 0;
-            foreach (var (pos, wcount, ccount) in tracker.TraverseLineMarkup())
+            foreach (var (pos, wcount, ccount) in tracker.EnumerateLineMarkup())
             {
                 if (i > 0)
                     buf[i++] = CHAR_NEWLINE;

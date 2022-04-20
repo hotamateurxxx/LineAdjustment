@@ -3,7 +3,7 @@ using System;
 
 namespace LineAdjustment.Tests
 {
-    public class TextTrackerTests
+    public class TextMarkerTests
     {
         [Test]
         [TestCase(null, 5, new string[]{})]
@@ -15,9 +15,9 @@ namespace LineAdjustment.Tests
             new string[] { "dolor", "sit"}, 11, 2)]
         public void TraverseWordMarkupTest(string input, int lineWidth, string[] expected, int start = 0, int count = 0)
         {
-            var tracker = new TextTracker(input, lineWidth);
+            var tracker = new TextMarker(input, lineWidth);
             var list = new System.Collections.Generic.List<string>();
-            foreach (var (pos, length) in tracker.TraverseWordMarkup(start, count))
+            foreach (var (pos, length) in tracker.EnumerateWordMarkup(start, count))
             {
                 list.Add(input.AsSpan(pos, length).ToString());
             }
@@ -35,9 +35,9 @@ namespace LineAdjustment.Tests
             new string[] { "Lorem  ipsum", "dolor    sit", "amet        ", "consectetur ", "adipiscing  ", "elit  sed do", "eiusmod     ", "tempor      ", "incididunt  ", "ut labore et", "dolore magna", "aliqua      " })]
         public void TraverseWideLineTest(string input, int lineWidth, string[] expected)
         {
-            var tracker = new TextTracker(input, lineWidth);
+            var tracker = new TextMarker(input, lineWidth);
             var list = new System.Collections.Generic.List<string>();
-            foreach (var (pos, wcount, ccount) in tracker.TraverseLineMarkup())
+            foreach (var (pos, wcount, ccount) in tracker.EnumerateLineMarkup())
             {
                 list.Add(new string(tracker.GetWideLine(pos, wcount, ccount)));
             }

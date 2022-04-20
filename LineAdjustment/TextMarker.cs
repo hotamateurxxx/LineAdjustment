@@ -3,7 +3,7 @@ using System.Collections.Generic;
 
 namespace LineAdjustment
 {
-    public struct TextTracker
+    public struct TextMarker
     {
 
         private const char CHAR_SPACE = '\u0020';
@@ -35,7 +35,7 @@ namespace LineAdjustment
         private readonly string Input;
         private readonly int Width;
 
-        public TextTracker(in string input, int width)
+        public TextMarker(in string input, int width)
         {
             Input = input;
             Width = width;
@@ -48,7 +48,7 @@ namespace LineAdjustment
         /// <param name="count">Количество читаемых слов (сколько перечислять).</param>
         /// <returns>Перечисление в формате (позиция, длина).</returns>
         /// <exception cref="ArithmeticException"></exception>
-        public IEnumerable<(int pos, int length)> TraverseWordMarkup(int start = 0, int count = 0)
+        public IEnumerable<(int pos, int length)> EnumerateWordMarkup(int start = 0, int count = 0)
         {
             var found = false;
             var i = start;
@@ -88,13 +88,13 @@ namespace LineAdjustment
         /// Перечисление информации о разбивке по строкам.
         /// </summary>
         /// <returns>Перечисление в формате (позиция, количество слов, количество символов).</returns>
-        public IEnumerable<(int pos, int wcount, int ccount)> TraverseLineMarkup()
+        public IEnumerable<(int pos, int wcount, int ccount)> EnumerateLineMarkup()
         {
             var found = false;
             var pos = 0;
             var wcount = 0;
             var ccount = 0;
-            foreach (var (wpos, wlength) in TraverseWordMarkup())
+            foreach (var (wpos, wlength) in EnumerateWordMarkup())
             {
                 var newWidth = CalcLineWidth(wcount + 1, ccount + wlength);
                 if (newWidth > Width)
@@ -141,7 +141,7 @@ namespace LineAdjustment
                 var wnum = 0;
                 var rpos = 0;
                 var (each, first) = CalcLineSpaces(line.wcount, line.ccount, Width);
-                foreach (var (wpos, wlength) in TraverseWordMarkup(line.pos, line.wcount))
+                foreach (var (wpos, wlength) in EnumerateWordMarkup(line.pos, line.wcount))
                 {
                     rpos += wnum > 0
                         ? each + (wnum > first ? 0 : 1)
