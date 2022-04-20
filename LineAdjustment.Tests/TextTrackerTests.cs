@@ -28,24 +28,6 @@ namespace LineAdjustment.Tests
         [Test]
         [TestCase(null, 5, new string[] { })]
         [TestCase("", 5, new string[] { })]
-        [TestCase("test", 5, new string[] { "test" })]
-        [TestCase("Lorem ipsum dolor sit amet consectetur adipiscing elit sed do eiusmod tempor incididunt ut labore et dolore magna aliqua", 12,
-            new string[] { "Lorem ipsum", "dolor sit", "amet", "consectetur", "adipiscing", "elit sed do", "eiusmod", "tempor", "incididunt", "ut labore et", "dolore magna", "aliqua" })]
-        public void GetSourceLinesTest(string input, int lineWidth, string[] expected)
-        {
-            var iterator = new TextTracker(input, lineWidth);
-            var list = new System.Collections.Generic.List<string>();
-            foreach (var (pos, wcount, ccount) in iterator.EnumerateLines())
-            {
-                list.Add(iterator.GetSourceLine(pos, ccount).ToString());
-            }
-            var actual = list.ToArray();
-            Assert.AreEqual(expected, actual);
-        }
-
-        [Test]
-        [TestCase(null, 5, new string[] { })]
-        [TestCase("", 5, new string[] { })]
         [TestCase("test", 5, new string[] { "test " })]
         [TestCase("Lorem ipsum", 12, new string[] { "Lorem  ipsum" })]
         [TestCase("Lorem ipsum dolor sit", 12, new string[] { "Lorem  ipsum", "dolor    sit" })]

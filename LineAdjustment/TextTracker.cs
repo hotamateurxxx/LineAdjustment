@@ -120,24 +120,6 @@ namespace LineAdjustment
         }
 
         /// <summary>
-        /// Строка на входе (технический метод для контроля).
-        /// </summary>
-        /// <param name="pos">Позиция начала строки.</param>
-        /// <param name="chars_count">Количество символов в словах.</param>
-        /// <returns>Строка для проверки.</returns>
-        public ReadOnlySpan<char> GetSourceLine(int pos, int chars_count)
-        {
-            var i = pos;
-            while (chars_count > 0)
-            {
-                if (Input[i] != CHAR_SPACE)
-                    chars_count--;
-                i++;
-            }
-            return Input.AsSpan(pos, i - pos);
-        }
-
-        /// <summary>
         /// Получить растянутую по ширине строку.
         /// </summary>
         /// <param name="pos">Позиция.</param>
