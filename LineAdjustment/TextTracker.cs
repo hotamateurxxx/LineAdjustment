@@ -35,7 +35,7 @@ namespace LineAdjustment
         private readonly string Input;
         private readonly int Width;
 
-        public TextTracker(in string input, in int width)
+        public TextTracker(in string input, int width)
         {
             Input = input;
             Width = width;
@@ -119,16 +119,8 @@ namespace LineAdjustment
                 yield return (pos, wcount, ccount);
         }
 
-        /// <summary>
-        /// Получить растянутую по ширине строку.
-        /// </summary>
-        /// <param name="pos">Позиция.</param>
-        /// <param name="words_count">Количество слов.</param>
-        /// <param name="chars_count">Количество символов.</param>
-        /// <returns>Растянутая по ширине строка.</returns>
-        public char[] GetWideLine(int pos, int words_count, int chars_count)
+        public void FillWideLine(in char[] buf, int pos, int words_count, int chars_count)
         {
-            var buf = new char[Width];
             Array.Fill(buf, CHAR_SPACE, 0, Width);
             if (words_count == 1)
             {
@@ -141,7 +133,7 @@ namespace LineAdjustment
                 var (each, first) = CalcLineSpaces(words_count, chars_count, Width);
                 foreach (var (wpos, wlength) in EnumerateWords(pos, words_count))
                 {
-                    rpos += wnum > 0 
+                    rpos += wnum > 0
                         ? each + (wnum > first ? 0 : 1)
                         : 0;
                     Input.CopyTo(wpos, buf, rpos, wlength);
@@ -149,6 +141,19 @@ namespace LineAdjustment
                     wnum++;
                 }
             }
+        }
+
+        /// <summary>
+        /// Получить растянутую по ширине строку.
+        /// </summary>
+        /// <param name="pos">Позиция.</param>
+        /// <param name="words_count">Количество слов.</param>
+        /// <param name="chars_count">Количество символов.</param>
+        /// <returns>Растянутая по ширине строка.</returns>
+        public char[] GetWideLine(int pos, int words_count, int chars_count)
+        {
+            var buf = new char[Width];
+            FillWideLine(buf, pos, words_count, chars_count);
             return buf;
         }
 

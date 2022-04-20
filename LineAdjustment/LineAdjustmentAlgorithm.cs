@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Text;
 
 namespace LineAdjustment
 {
@@ -8,7 +9,7 @@ namespace LineAdjustment
 
 
 
-        private const char CHAR_RETURN = '\u000d';
+        private const char CHAR_NEWLINE = '\n';
         private const float CAPACITY_MULT = 2;
 
         /*
@@ -48,8 +49,15 @@ namespace LineAdjustment
 
         public string Transform(string input, int lineWidth)
         {
-            //var lineIterator = new LineIterator() { Input = input, Width = lineWidth };
-            throw new NotImplementedException();
+            var tracker = new TextTracker(input, lineWidth);
+            var rval = new StringBuilder();
+            foreach (var (pos, wcount, ccount) in tracker.EnumerateLines())
+            {
+                if (rval.Length > 0)
+                    rval.Append(CHAR_NEWLINE);
+                rval.Append(tracker.GetWideLine(pos, wcount, ccount));
+            }
+            return rval.ToString();
         }
     }
 }
