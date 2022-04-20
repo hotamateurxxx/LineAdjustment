@@ -44,19 +44,20 @@ namespace LineAdjustment.Tests
         }
 
         [Test]
-        //[TestCase(null, 5, new string[] { })]
-        //[TestCase("", 5, new string[] { })]
+        [TestCase(null, 5, new string[] { })]
+        [TestCase("", 5, new string[] { })]
         [TestCase("test", 5, new string[] { "test " })]
-        /*[TestCase("Lorem ipsum dolor sit amet consectetur adipiscing elit sed do eiusmod tempor incididunt ut labore et dolore magna aliqua", 12,
-            new string[] { "Lorem ipsum", "dolor sit", "amet", "consectetur", "adipiscing", "elit sed do", "eiusmod", "tempor", "incididunt", "ut labore et", "dolore magna", "aliqua" })]
-        */
+        [TestCase("Lorem ipsum", 12, new string[] { "Lorem  ipsum" })]
+        [TestCase("Lorem ipsum dolor sit", 12, new string[] { "Lorem  ipsum", "dolor    sit" })]
+        [TestCase("Lorem ipsum dolor sit amet consectetur adipiscing elit sed do eiusmod tempor incididunt ut labore et dolore magna aliqua", 12,
+            new string[] { "Lorem  ipsum", "dolor    sit", "amet        ", "consectetur ", "adipiscing  ", "elit  sed do", "eiusmod     ", "tempor      ", "incididunt  ", "ut labore et", "dolore magna", "aliqua      " })]
         public void GetWideLinesTest(string input, int lineWidth, string[] expected)
         {
             var iterator = new TextIterator(input, lineWidth);
             var list = new System.Collections.Generic.List<string>();
             foreach (var (pos, wcount, ccount) in iterator.GetLines())
             {
-                list.Add(iterator.GetWideLine(pos, wcount, ccount).ToString());
+                list.Add(new string(iterator.GetWideLine(pos, wcount, ccount)));
             }
             var actual = list.ToArray();
             Assert.AreEqual(expected, actual);

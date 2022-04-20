@@ -160,7 +160,7 @@ namespace LineAdjustment
                 foreach (var (wpos, wlength) in GetWords(pos, wcount))
                 {
                     rpos += wnum > 0 
-                        ? each + (wnum <= first ? 0 : 1) 
+                        ? each + (wnum > first ? 0 : 1)
                         : 0;
                     Input.CopyTo(wpos, buf, rpos, wlength);
                     rpos += wlength;
