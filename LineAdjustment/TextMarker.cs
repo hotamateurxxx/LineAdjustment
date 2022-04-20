@@ -3,10 +3,11 @@ using System.Collections.Generic;
 
 namespace LineAdjustment
 {
-    public struct TextMarker
+
+    public class TextMarker
     {
 
-        private const char CHAR_SPACE = '\u0020';
+        protected const char CHAR_SPACE = '\u0020';
 
         /// <summary>
         /// Вычисление минимальной ширины строки.
@@ -19,21 +20,8 @@ namespace LineAdjustment
                 ? 0
                 : words_count - 1 + chars_count;
 
-        /// <summary>
-        /// Вычисление количества пробелов между словами в строке.
-        /// </summary>
-        /// <param name="words_count">Количество слов.</param>
-        /// <param name="chars_count">Количество символов.</param>
-        /// <param name="line_width">Ширина строки.</param>
-        /// <returns>Количесто пробелов в формате (each, first).</returns>
-        private static (int each, int first) CalcLineSpaces(int words_count, int chars_count, int line_width)
-            => (
-                (line_width - chars_count) / (words_count - 1), 
-                (line_width - chars_count) % (words_count - 1)
-            );
-
-        private readonly string Input;
-        private readonly int Width;
+        protected readonly string Input;
+        protected readonly int Width;
 
         public TextMarker(in string input, int width)
         {
@@ -117,57 +105,6 @@ namespace LineAdjustment
             }
             if (found)
                 yield return (pos, wcount, ccount);
-        }
-
-        /// <summary>
-        /// Записать в буфер растянутую линию по её разметке.
-        /// </summary>
-        /// <param name="buf">Буфер.</param>
-        /// <param name="buf_pos">Позиция буфера.</param>
-        /// <param name="line">Разметка линии.</param>
-        /// <returns>Успешность операции.</returns>
-        public bool WriteWideLine(in char[] buf, ref int buf_pos, (int pos, int wcount, int ccount) line)
-        {
-            if (buf.Length < buf_pos + Width)
-                return false;
-
-            Array.Fill(buf, CHAR_SPACE, buf_pos, Width);
-            if (line.wcount == 1)
-            {
-                Input.CopyTo(line.pos, buf, buf_pos, line.ccount);
-            }
-            else
-            {
-                var wnum = 0;
-                var rpos = 0;
-                var (each, first) = CalcLineSpaces(line.wcount, line.ccount, Width);
-                foreach (var (wpos, wlength) in EnumerateWordMarkup(line.pos, line.wcount))
-                {
-                    rpos += wnum > 0
-                        ? each + (wnum > first ? 0 : 1)
-                        : 0;
-                    Input.CopyTo(wpos, buf, buf_pos + rpos, wlength);
-                    rpos += wlength;
-                    wnum++;
-                }
-            }
-            buf_pos += Width;
-            return true;
-        }
-
-        /// <summary>
-        /// Получить растянутую по ширине строку.
-        /// </summary>
-        /// <param name="pos">Позиция.</param>
-        /// <param name="words_count">Количество слов.</param>
-        /// <param name="chars_count">Количество символов.</param>
-        /// <returns>Растянутая по ширине строка.</returns>
-        public char[] GetWideLine(int pos, int words_count, int chars_count)
-        {
-            var buf = new char[Width];
-            var buf_pos = 0;
-            WriteWideLine(buf, ref buf_pos, (pos, words_count, chars_count));
-            return buf;
         }
 
     }
