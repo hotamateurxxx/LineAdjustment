@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 
 namespace LineAdjustment
 {
@@ -34,8 +35,9 @@ namespace LineAdjustment
         /// <param name="buf">Буфер.</param>
         /// <param name="buf_pos">Позиция буфера.</param>
         /// <param name="line">Разметка линии.</param>
+        /// <param name="words">Итератор слов.</param>
         /// <returns>Успешность операции.</returns>
-        private bool TryWriteBuf(in char[] buf, ref int buf_pos, (int pos, int wcount, int ccount) line)
+        private bool TryWriteBuf(in char[] buf, ref int buf_pos, (int pos, int wcount, int ccount) line, IEnumerator<(int pow, int wlength)> words)
         {
             if (buf.Length < buf_pos + Width)
                 return false;
@@ -44,21 +46,24 @@ namespace LineAdjustment
             if (line.wcount == 1)
             {
                 Input.CopyTo(line.pos, buf, buf_pos, line.ccount);
+                words.MoveNext();
             }
             else
             {
                 var wnum = 0;
                 var rpos = 0;
                 var (each, first) = CalcLineSpaces(line.wcount, line.ccount, Width);
-                foreach (var (wpos, wlength) in EnumerateWordMarkup(line.pos, line.wcount))
+                do
                 {
+                    var (wpos, wlength) = words.Current;
                     rpos += wnum > 0
                         ? each + (wnum > first ? 0 : 1)
                         : 0;
                     Input.CopyTo(wpos, buf, buf_pos + rpos, wlength);
+                    words.MoveNext();
                     rpos += wlength;
                     wnum++;
-                }
+                } while (wnum < line.wcount);
             }
             buf_pos += Width;
             return true;
@@ -77,17 +82,21 @@ namespace LineAdjustment
 
             var buf = new char[(int)(Input.Length * capacity_mult)];
             var i = 0;
-            foreach (var (pos, wcount, ccount) in EnumerateLineMarkup())
+            using (var words = EnumerateWordMarkup().GetEnumerator())
             {
-                if (i > 0)
-                    buf[i++] = CHAR_NEWLINE;
-                while (!TryWriteBuf(in buf, ref i, (pos, wcount, ccount)))
+                words.MoveNext();
+                foreach (var line in EnumerateLineMarkup())
                 {
-                    capacity_mult += capacity_step;
-                    var buf2 = new char[(int)(Input.Length * capacity_mult)];
-                    Array.Copy(buf, buf2, buf.Length);
-                    buf = buf2;
-                };
+                    if (i > 0)
+                        buf[i++] = CHAR_NEWLINE;
+                    while (!TryWriteBuf(in buf, ref i, line, words))
+                    {
+                        capacity_mult += capacity_step;
+                        var buf2 = new char[(int)(Input.Length * capacity_mult)];
+                        Array.Copy(buf, buf2, buf.Length);
+                        buf = buf2;
+                    };
+                }
             }
             return new string(buf, 0, i);
         }
